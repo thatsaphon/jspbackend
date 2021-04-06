@@ -13,8 +13,18 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
       },
       description: DataTypes.STRING,
-      averageCost: DataTypes.DECIMAL(10, 2),
-      lastPurchaseCost: DataTypes.DECIMAL(10, 2),
+      price: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+      },
+      averageCost: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+      },
+      lastPurchaseCost: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+      },
     },
     { underscored: true }
   )
@@ -22,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     Product.belongsTo(models.Category, {
       foreignKey: {
         name: "categoryId",
+        defaultValue: 0,
       },
       onDelete: "SET NULL",
       onUpdate: "CASCADE",

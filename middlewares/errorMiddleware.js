@@ -1,3 +1,4 @@
 exports.errorMiddleware = (err, req, res, next) => {
-  res.status(500).json({ message: "internal server error" })
+  console.log(err)
+  res.status(500).json({ message: err })
 }

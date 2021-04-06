@@ -31,9 +31,9 @@ module.exports = (sequelize, DataTypes) => {
   )
 
   Address.associate = (models) => {
-    Address.belongsTo(models.User, {
+    Address.hasMany(models.UserAddress, {
       foreignKey: {
-        name: "userId",
+        name: "addressId",
       },
       onDelete: "CASCADE",
       onUpdate: "CASCADE",

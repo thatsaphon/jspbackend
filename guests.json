@@ -1,0 +1,12 @@
+{
+  "guests": [
+    {
+      "guestId": 1,
+      "cart": [
+        { "productId": "1", "quantity": 2 },
+        { "productId": "2", "quantity": 3 }
+      ]
+    },
+    { "guestId": 2, "cart": [] }
+  ]
+}

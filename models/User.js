@@ -2,7 +2,7 @@ module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
     "User",
     {
-      user: {
+      username: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -24,7 +24,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       email: DataTypes.STRING,
-      postCode: DataTypes.STRING,
     },
     { underscored: true }
   )
@@ -41,10 +40,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: {
         name: "userId",
       },
-      onDelete: "NO ACTION",
+      onDelete: "CASCADE",
       onUpdate: "CASCADE",
     })
-    User.hasMany(models.Address, {
+    User.hasMany(models.UserAddress, {
       foreignKey: {
         name: "userId",
       },
