@@ -1,0 +1,6 @@
+module.exports = (sequelize, DataTypes) => {
+  const PostCode = sequelize.define("PostCode", {
+    provinceName: DataTypes.STRING,
+  })
+  return PostCode
+}
