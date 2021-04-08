@@ -35,8 +35,8 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: {
         name: "addressId",
       },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
   }
 

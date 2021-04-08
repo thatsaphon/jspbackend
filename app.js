@@ -5,18 +5,23 @@ const cors = require("cors")
 const { errorMiddleware } = require("./middlewares/errorMiddleware")
 const productRoute = require("./routes/productRoute")
 const userRoute = require("./routes/userRoute")
+const cartRoute = require("./routes/cartRoute")
+const salesRoute = require("./routes/salesRoute")
 const { sequelize } = require("./models")
 const userController = require("./controllers/userController")
+const cartController = require("./controllers/cartController")
 
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
-app.get("/guest", userController.guest)
+app.get("/guest", cartController.findGuessCart)
 
 app.post("/register", userController.register)
 app.post("/login", userController.login)
 
+app.use("/order", salesRoute)
+app.use("/cart", cartRoute)
 app.use("/product", productRoute)
 app.use("/user", userRoute)
 

@@ -13,8 +13,8 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: {
         name: "profilePictureId",
       },
-      onDelete: "NO ACTION",
-      onUpdate: "NO ACTION",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
   }
 

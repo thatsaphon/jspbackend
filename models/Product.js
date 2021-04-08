@@ -34,16 +34,24 @@ module.exports = (sequelize, DataTypes) => {
         name: "categoryId",
         defaultValue: 0,
       },
-      onDelete: "SET NULL",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
     Product.hasMany(models.TransactionItem, {
       foreignKey: {
         name: "productId",
         allowNull: false,
       },
-      onDelete: "NO ACTION",
-      onUpdate: "NO ACTION",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
+    })
+    Product.hasMany(models.CartItem, {
+      foreignKey: {
+        name: "productId",
+        allowNull: false,
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
   }
 

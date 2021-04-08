@@ -12,8 +12,8 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: {
         name: "categoryId",
       },
-      onDelete: "SET NULL",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
   }
 

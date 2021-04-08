@@ -33,22 +33,30 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: {
         name: "profilePictureId",
       },
-      onDelete: "NO ACTION",
-      onUpdate: "NO ACTION",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
     User.hasMany(models.Transaction, {
       foreignKey: {
         name: "userId",
       },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
     User.hasMany(models.UserAddress, {
       foreignKey: {
         name: "userId",
       },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
+    })
+    User.hasMany(models.CartItem, {
+      foreignKey: {
+        name: "userId",
+        allowNull: false,
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
   }
 

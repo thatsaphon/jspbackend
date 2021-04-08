@@ -1,0 +1,22 @@
+{
+  "guests": [
+    {
+      "id": 1,
+      "cart": [
+        { "productId": "1", "quantity": 2 },
+        { "productId": "2", "quantity": 3 }
+      ]
+    },
+    { "id": 2, "cart": [] },
+    { "id": 3, "cart": [] }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "cart": [
+        { "productId": "1", "quantity": 2 },
+        { "productId": "2", "quantity": 3 }
+      ]
+    }
+  ]
+}

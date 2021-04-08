@@ -13,7 +13,13 @@ module.exports = (sequelize, DataTypes) => {
       },
       status: {
         type: DataTypes.ENUM,
-        values: ["ORDERS,CONFIRMED,PAYMENT_RECEIVED,IN_TRANSIT,RECEIVED"],
+        values: [
+          "ORDERS",
+          "CONFIRMED",
+          "CANCELLED",
+          "PAYMENT_RECEIVED",
+          "IN_TRANSIT,RECEIVED",
+        ],
         allowNull: false,
       },
       address: DataTypes.STRING,
@@ -28,18 +34,18 @@ module.exports = (sequelize, DataTypes) => {
   Transaction.associate = (models) => {
     Transaction.belongsTo(models.User, {
       foreignKey: {
-        name: "transactionId",
+        name: "userId",
         allowNull: false,
       },
-      onDelete: "NO ACTION",
-      onUpdate: "NO ACTION",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
     Transaction.hasMany(models.TransactionItem, {
       foreignKey: {
-        name: "userId",
+        name: "transactionId",
       },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
   }
 

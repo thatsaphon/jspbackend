@@ -6,15 +6,15 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: {
         name: "userId",
       },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
     UserAddress.belongsTo(models.Address, {
       foreignKey: {
         name: "addressId",
       },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+      onUpdate: "RESTRICT",
     })
   }
 

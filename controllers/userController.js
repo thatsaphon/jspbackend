@@ -59,29 +59,35 @@ exports.me = async (req, res, next) => {
 
 exports.guest = async (req, res, next) => {
   if (!req.headers.authorization) {
-    const data = await readFile("./guests.json", "utf8")
-    const guests = JSON.parse(data)
-    console.log(guests)
-    console.log(guests.guests[guests.guests.length - 1])
-    const guestId = guests.guests[guests.guests.length - 1].guestId + 1
+    const data = await readFile("./carts.json", "utf8")
+    const carts = JSON.parse(data)
+    console.log(carts)
+    console.log(carts.carts[0])
+    const guestId = carts.carts[carts.carts.length - 1].id + 1
     console.log(guestId)
-    const token = await jwt.sign({ guestId }, process.env.JWT_SECRET, {
+    const token = await jwt.sign({ id: guestId }, process.env.JWT_SECRET, {
       expiresIn: +process.env.JWT_EXPIRES_IN,
     })
-    guests.guests.push({ guestId, cart: [] })
-    await writeFile("./guests.json", JSON.stringify(guests))
-    console.log(guests)
-    res.status(200).json({ token })
+    carts.carts.push({ id: guestId, user: 0, cart: [] })
+    await writeFile("./carts.json", JSON.stringify(carts))
+    console.log(carts)
+    req.carts = carts
+    req.cartId = { id: guestId }
+    next()
+    // res.status(200).json({ token })
   } else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1]
     const payload = jwt.verify(token, process.env.JWT_SECRET)
-    console.log(payload)
-    const data = await readFile("./guests.json", "utf8")
-    const guests = JSON.parse(data)
-    res.status(200).json({ message: "Continue shopping with existed guestId" })
+    console.log(payload.id)
+    const data = await readFile("./carts.json", "utf8")
+    const carts = JSON.parse(data)
+    req.carts = carts
+    req.cartId = { id: payload.id }
+    // res.status(200).json({ message: "Continue shopping with existed guestId" })
+    next()
   } else next()
 }
 
