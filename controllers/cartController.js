@@ -1,6 +1,6 @@
-const fs = require("fs")
-const util = require("util")
-const { CartItem, Product } = require("../models")
+const fs = require('fs')
+const util = require('util')
+const { CartItem, Product } = require('../models')
 
 const readFile = util.promisify(fs.readFile)
 const writeFile = util.promisify(fs.writeFile)
@@ -48,7 +48,7 @@ const writeFile = util.promisify(fs.writeFile)
 // }
 
 exports.findGuessCart = async (req, res, next) => {
-  const data = await readFile("./carts.json", "utf8")
+  const data = await readFile('./carts.json', 'utf8')
   const carts = JSON.parse(data)
   // const { cart } = JSON.parse(req.headers.authorization)
   console.log(carts)
@@ -56,7 +56,7 @@ exports.findGuessCart = async (req, res, next) => {
     const cartId = carts.carts[carts.carts.length - 1].cartId + 1
     req.headers.authorization = { cartId: cartId, cart: [] }
     carts.carts.push(req.headers.authorization)
-    await writeFile("./carts.json", JSON.stringify(carts))
+    await writeFile('./carts.json', JSON.stringify(carts))
     req.carts = carts
   }
   // const index = carts.carts.indexOf(
@@ -68,7 +68,7 @@ exports.findGuessCart = async (req, res, next) => {
   )
   console.log(carts.carts[4].cartId)
   console.log(req.headers.authorization.cartId)
-  console.log("sssssssssssssss", index)
+  console.log('sssssssssssssss', index)
   req.carts = carts
   req.index = index
   // req.cart = cart
@@ -102,7 +102,7 @@ exports.addItemGuestCart = async (req, res, next) => {
   console.log(req.headers.authorization)
   req.carts.carts[req.index].cart.push({ productId: id, quantity, price })
   console.log(req.carts)
-  await writeFile("./carts.json", JSON.stringify(req.carts))
+  await writeFile('./carts.json', JSON.stringify(req.carts))
   res.status(200).json({ cart: req.carts.carts })
 }
 
@@ -113,7 +113,7 @@ exports.removeItemGuestCart = async (req, res, next) => {
     (item) => item.productId === id
   )
   if (idx === -1)
-    res.status(400).json({ message: "this product is not in the cart" })
+    res.status(400).json({ message: 'this product is not in the cart' })
   req.headers.authorization.cart = req.headers.authorization.cart.filter(
     (item) => item.productId !== id
   )
@@ -125,7 +125,7 @@ exports.removeItemGuestCart = async (req, res, next) => {
   // else cart[idx] = { productId: id, quantity, price }
   console.log(req.headers.authorization)
   console.log(req.carts)
-  await writeFile("./carts.json", JSON.stringify(req.carts))
+  await writeFile('./carts.json', JSON.stringify(req.carts))
   res.status(204).json()
 }
 
@@ -133,9 +133,13 @@ exports.getUserCart = async (req, res, next) => {
   try {
     const cart = await CartItem.findAll({
       where: {
-        userId: req.user,
-        status: "IN CART",
+        userId: req.user.id,
+        status: 'IN CART'
       },
+      include: {
+        model: Product,
+        attributes: ['price', 'name', 'description', 'imgPath']
+      }
     })
     res.status(200).json({ cart })
   } catch (err) {
@@ -148,13 +152,13 @@ exports.addUserCart = async (req, res, next) => {
     const { productId, quantity } = req.body
     const isProductExist = await Product.findOne({ where: { id: productId } })
     if (!isProductExist)
-      res.status(400).json({ message: "this product does not exist" })
+      res.status(400).json({ message: 'this product does not exist' })
     const isAlreadyInCart = await CartItem.findOne({
       where: {
         productId,
         userId: req.user.id,
-        status: "IN CART",
-      },
+        status: 'IN CART'
+      }
     })
     const unitPrice = isProductExist.price
     // console.log(isAlreadyInCart)
@@ -168,7 +172,7 @@ exports.addUserCart = async (req, res, next) => {
       quantity,
       unitPrice,
       userId: req.user.id,
-      status: "IN CART",
+      status: 'IN CART'
     })
     res.status(200).json({ productId, quantity, unitPrice })
   } catch (err) {
@@ -182,11 +186,11 @@ exports.removeUserCart = async (req, res, next) => {
     where: {
       productId,
       userId: req.user.id,
-      status: "IN CART",
-    },
+      status: 'IN CART'
+    }
   })
   if (!isAlreadyInCart)
-    return res.status(400).json({ message: "this product is not in your cart" })
-  await isAlreadyInCart.update({ status: "REMOVED" })
+    return res.status(400).json({ message: 'this product is not in your cart' })
+  await isAlreadyInCart.update({ status: 'REMOVED' })
   res.status(204).json()
 }

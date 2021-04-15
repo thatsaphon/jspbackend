@@ -1,5 +1,5 @@
-const { Op } = require("sequelize")
-const { Product } = require("../models")
+const { Op } = require('sequelize')
+const { Product } = require('../models')
 
 exports.getAllProduct = async (req, res, next) => {
   try {
@@ -22,25 +22,25 @@ exports.getProductById = async (req, res, next) => {
 exports.getFilteredProduct = async (req, res, next) => {
   try {
     let { name, description, categoryId, price } = req.query
-    if (!name) name = ""
-    if (!description) description = ""
-    if (!categoryId) categoryId = ""
-    if (!price) price = ""
+    if (!name) name = ''
+    if (!description) description = ''
+    if (!categoryId) categoryId = ''
+    if (!price) price = ''
     const products = await Product.findAll({
       where: {
         name: {
-          [Op.substring]: `${name}`,
+          [Op.substring]: `${name}`
         },
         description: {
-          [Op.substring]: `${description}`,
+          [Op.substring]: `${description}`
         },
         categoryId: {
-          [Op.substring]: `${categoryId}`,
+          [Op.substring]: `${categoryId}`
         },
         price: {
-          [Op.substring]: `${price}`,
-        },
-      },
+          [Op.substring]: `${price}`
+        }
+      }
     })
     // console.log(products)
     res.status(200).json({ products })
@@ -50,23 +50,24 @@ exports.getFilteredProduct = async (req, res, next) => {
 }
 exports.createProduct = async (req, res, next) => {
   try {
-    if (req.user.userType !== "ADMIN")
-      return res.status(400).json({ message: "You are unauthorized" })
-    const { code, name, description, categoryId, price } = req.body
+    if (req.user.userType !== 'ADMIN')
+      return res.status(400).json({ message: 'You are unauthorized' })
+    const { code, name, description, categoryId, price, imgUrl } = req.body
     const isCodeExist = await Product.findOne({ where: { code } })
     if (isCodeExist)
-      return res.status(400).json({ message: "this code is already exist" })
+      return res.status(400).json({ message: 'this code is already exist' })
     const isNameExist = await Product.findOne({ where: { name } })
     if (isNameExist)
       return res
         .statue(400)
-        .json({ message: "this product name is already exist" })
+        .json({ message: 'this product name is already exist' })
     const product = await Product.create({
       code,
       name,
       description,
       categoryId,
       price,
+      imgUrl
     })
     res.status(201).json({ product })
   } catch (err) {
@@ -80,12 +81,12 @@ exports.updateProduct = async (req, res, next) => {
     const isCodeExist = Product.findOne({ where: { code } })
     console.log(isCodeExist)
     if (isCodeExist)
-      return res.status(400).json({ message: "this code already exist" })
+      return res.status(400).json({ message: 'this code already exist' })
     const isNameExist = Product.findOne({ where: { name } })
     if (isNameExist)
       return res
         .statue(400)
-        .json({ message: "this product name already exist" })
+        .json({ message: 'this product name already exist' })
     const product = await Product.update(
       { code, name, description, categoryId, price },
       { where: { id } }
@@ -100,7 +101,7 @@ exports.deleteProduct = async (req, res, next) => {
     const { id } = req.params
     const product = await Product.findByPk(id)
     if (!product)
-      return res.status(400).json({ message: "this product ID does not exist" })
+      return res.status(400).json({ message: 'this product ID does not exist' })
     product.destroy()
     res.status(204).json()
   } catch (err) {

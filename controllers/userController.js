@@ -1,9 +1,9 @@
-const bcrypt = require("bcryptjs")
-const jwt = require("jsonwebtoken")
-const { User } = require("../models")
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const { User, Address, UserAddress } = require('../models')
 
-const fs = require("fs")
-const util = require("util")
+const fs = require('fs')
+const util = require('util')
 
 const readFile = util.promisify(fs.readFile)
 const writeFile = util.promisify(fs.writeFile)
@@ -13,16 +13,16 @@ exports.protect = async (req, res, next) => {
     let token = null
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
+      req.headers.authorization.startsWith('Bearer')
     ) {
-      token = req.headers.authorization.split(" ")[1]
+      token = req.headers.authorization.split(' ')[1]
     }
-    if (!token) return res.status(401).json({ message: "You are unauthorized" })
+    if (!token) return res.status(401).json({ message: 'You are unauthorized' })
 
     const payload = jwt.verify(token, process.env.JWT_SECRET)
     console.log(payload)
     const user = await User.findOne({ where: { id: payload.id } })
-    if (!user) return res.status(400).json({ message: "user not found" })
+    if (!user) return res.status(400).json({ message: 'user not found' })
     req.user = user
     next()
   } catch (err) {
@@ -40,8 +40,21 @@ exports.me = async (req, res, next) => {
       lastName,
       phoneNumber,
       email,
-      profilePictureId,
+      profilePictureId
     } = req.user
+    const {
+      address,
+      subDistrict,
+      district,
+      province,
+      postCode
+    } = await Address.findOne({
+      include: { model: UserAddress, where: { userId: id } }
+    })
+    // const address = await UserAddress.findOne({
+    //   include: { model: Address },
+    //   where: { userId: id }
+    // })
     res.status(200).json({
       id,
       username,
@@ -51,6 +64,11 @@ exports.me = async (req, res, next) => {
       phoneNumber,
       email,
       profilePictureId,
+      textAddress: address,
+      subDistrict,
+      district,
+      province,
+      postCode
     })
   } catch (err) {
     next(err)
@@ -59,17 +77,17 @@ exports.me = async (req, res, next) => {
 
 exports.guest = async (req, res, next) => {
   if (!req.headers.authorization) {
-    const data = await readFile("./carts.json", "utf8")
+    const data = await readFile('./carts.json', 'utf8')
     const carts = JSON.parse(data)
     console.log(carts)
     console.log(carts.carts[0])
     const guestId = carts.carts[carts.carts.length - 1].id + 1
     console.log(guestId)
     const token = await jwt.sign({ id: guestId }, process.env.JWT_SECRET, {
-      expiresIn: +process.env.JWT_EXPIRES_IN,
+      expiresIn: +process.env.JWT_EXPIRES_IN
     })
     carts.carts.push({ id: guestId, user: 0, cart: [] })
-    await writeFile("./carts.json", JSON.stringify(carts))
+    await writeFile('./carts.json', JSON.stringify(carts))
     console.log(carts)
     req.carts = carts
     req.cartId = { id: guestId }
@@ -77,12 +95,12 @@ exports.guest = async (req, res, next) => {
     // res.status(200).json({ token })
   } else if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
+    req.headers.authorization.startsWith('Bearer')
   ) {
-    token = req.headers.authorization.split(" ")[1]
+    token = req.headers.authorization.split(' ')[1]
     const payload = jwt.verify(token, process.env.JWT_SECRET)
     console.log(payload.id)
-    const data = await readFile("./carts.json", "utf8")
+    const data = await readFile('./carts.json', 'utf8')
     const carts = JSON.parse(data)
     req.carts = carts
     req.cartId = { id: payload.id }
@@ -95,15 +113,15 @@ exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body
     if (!username && !username.trim())
-      return res.status(400).json({ message: "please insert username" })
+      return res.status(400).json({ message: 'please insert username' })
     if (!password)
-      return res.status(400).json({ message: "please insert password" })
+      return res.status(400).json({ message: 'please insert password' })
     const user = await User.findOne({ where: { username } })
     if (!user)
-      return res.status(400).json({ message: "username or password is wrong" })
+      return res.status(400).json({ message: 'username or password is wrong' })
     const isPasswordCorrected = await bcrypt.compare(password, user.password)
     if (!isPasswordCorrected)
-      return res.status(400).json({ message: "username or password is wrong" })
+      return res.status(400).json({ message: 'username or password is wrong' })
     const payload = {
       id: user.id,
       username: user.username,
@@ -113,10 +131,10 @@ exports.login = async (req, res, next) => {
       phoneNumber: user.phoneNumber,
       email: user.email,
       postCode: user.postCode,
-      profilePictureId: user.profilePictureId,
+      profilePictureId: user.profilePictureId
     }
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
+      expiresIn: process.env.JWT_EXPIRES_IN
     })
     res.status(200).json({ token })
   } catch (err) {
@@ -135,12 +153,15 @@ exports.register = async (req, res, next) => {
       phoneNumber,
       email,
       profilePictureId,
+      textAddress,
+      address
     } = req.body
+    console.log(textAddress, address)
     const isUsernameExist = await User.findOne({ where: { username } })
     if (isUsernameExist)
-      return res.status(400).json({ message: "username exist already" })
+      return res.status(400).json({ message: 'username exist already' })
     const hashedPassword = await bcrypt.hash(password, +process.env.BCRYPT_SALT)
-    console.log(hashedPassword)
+    // console.log(hashedPassword)
     const user = await User.create({
       username,
       password: hashedPassword,
@@ -149,9 +170,20 @@ exports.register = async (req, res, next) => {
       lastName,
       phoneNumber,
       email,
-      profilePictureId,
+      profilePictureId
     })
-    // console.log(user)
+    const dbAddress = await Address.create({
+      phoneNumber,
+      address: textAddress,
+      subDistrict: address.subDistrict,
+      district: address.district,
+      province: address.province,
+      postCode: address.postCode
+    })
+    await UserAddress.create({
+      addressId: dbAddress.id,
+      userId: user.id
+    })
 
     const payload = {
       id: user.id,
@@ -160,10 +192,10 @@ exports.register = async (req, res, next) => {
       lastName,
       phoneNumber,
       email,
-      profilePictureId,
+      profilePictureId
     }
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: +process.env.JWT_EXPIRES_IN,
+      expiresIn: +process.env.JWT_EXPIRES_IN
     })
     console.log(token)
 
@@ -182,7 +214,7 @@ exports.updateUser = async (req, res, next) => {
       lastName,
       phoneNumber,
       email,
-      profilePictureId,
+      profilePictureId
     } = req.body
     // const user = User.findOne({ where: { id } })
     // const isPasswordCorrected = bcrypt.compare(password, user.password)
@@ -194,7 +226,7 @@ exports.updateUser = async (req, res, next) => {
         lastName,
         phoneNumber,
         email,
-        profilePictureId,
+        profilePictureId
       },
       { where: { id } }
     )

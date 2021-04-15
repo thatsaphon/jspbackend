@@ -1,11 +1,11 @@
-const { QueryTypes } = require("sequelize")
+const { QueryTypes } = require('sequelize')
 const {
   Product,
   Transaction,
   CartItem,
   sequelize,
-  TransactionItem,
-} = require("../models")
+  TransactionItem
+} = require('../models')
 
 // exports.getAllSales = async (req, res, next) => {
 //   try {
@@ -24,12 +24,12 @@ exports.getAllSales = async (req, res, next) => {
   try {
     const sales = await Transaction.findAll({
       where: { userId: req.user.id },
-      order: [["createdAt", "desc"]],
+      order: [['createdAt', 'desc']],
       include: {
         model: TransactionItem,
-        attributes: ["productId", "quantity", "unitPrice"],
+        attributes: ['productId', 'quantity', 'unitPrice']
       },
-      attributes: ["id", "createdAt", "updatedAt", "status", "address"],
+      attributes: ['id', 'createdAt', 'updatedAt', 'status', 'address']
     })
     // const sales = await Transaction.query(
     //   `SELECT transaction.id, date, status, address, first_name, sur_name, phone, email,
@@ -49,22 +49,22 @@ exports.getsalesById = async (req, res, next) => {
       where: { id },
       include: {
         model: TransactionItem,
-        attributes: ["productId", "quantity", "unitPrice"],
+        attributes: ['productId', 'quantity', 'unitPrice']
       },
       attributes: [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "status",
-        "address",
-        "userId",
-      ],
+        'id',
+        'createdAt',
+        'updatedAt',
+        'status',
+        'address',
+        'userId'
+      ]
     })
     console.log(sale)
     if (sale.userId !== req.user.id)
       return res
         .status(400)
-        .json({ message: "You are unauthorized to see this order" })
+        .json({ message: 'You are unauthorized to see this order' })
     res.status(200).json({ sale })
   } catch (err) {
     next(err)
@@ -76,11 +76,11 @@ exports.createSales = async (req, res, next) => {
     const cartItems = await CartItem.findAll({
       where: {
         userId: req.user.id,
-        status: "IN CART",
-      },
+        status: 'IN CART'
+      }
     })
     if (!cartItems.length)
-      return res.status(400).json({ message: "You have no item in cart" })
+      return res.status(400).json({ message: 'You have no item in cart' })
 
     // const t = await sequelize.transaction()
     const result = await sequelize.transaction(async (t) => {
@@ -91,19 +91,19 @@ exports.createSales = async (req, res, next) => {
           surName,
           phone,
           email,
-          type: "SALES",
+          type: 'SALES',
           date: new Date(),
-          status: "ORDERS",
-          userId: req.user.id,
+          status: 'ORDERED',
+          userId: req.user.id
         },
         { transaction: t }
       )
-      console.log("ssssssssssssssssssssssssss", transaction.id)
+      console.log('ssssssssssssssssssssssssss', transaction.id)
       // const products = await Product.findAll()
       const transactionItems = []
       for (cartItem of cartItems) {
         const product = await Product.findOne({
-          where: { id: cartItem.productId },
+          where: { id: cartItem.productId }
         })
         const item = await TransactionItem.create(
           {
@@ -111,24 +111,25 @@ exports.createSales = async (req, res, next) => {
             transactionId: transaction.id,
             quantity: cartItem.quantity,
             unitPrice: cartItem.unitPrice,
-            unitCost: product.averageCost,
+            unitCost: product.averageCost
           },
           { transaction: t }
         )
         transactionItems.push(item)
-        cartItem.status = "SUBMIT TO ORDER"
+        cartItem.status = 'SUBMIT TO ORDER'
       }
       await CartItem.update(
-        { status: "SUBMIT TO ORDER" },
+        { status: 'SUBMIT TO ORDER' },
         {
-          where: { userId: req.user.id, status: "IN CART" },
-          transaction: t,
+          where: { userId: req.user.id, status: 'IN CART' },
+          transaction: t
         }
       )
+      return { transactionId: transaction.id }
     })
 
     console.log(result)
-    res.status(200).json({ message: "test" })
+    res.status(200).json({ orderId: result.transactionId })
   } catch (err) {
     next(err)
   }
@@ -141,7 +142,7 @@ exports.changeSalesStatus = async (req, res, next) => {
     if (sale.userId !== req.user.id)
       return res
         .status(400)
-        .json({ message: "You are unauthorized on this order" })
+        .json({ message: 'You are unauthorized on this order' })
     sale.update({ status })
     res.status(200).json({ message: `Order's status is updated to ${status}` })
   } catch (err) {

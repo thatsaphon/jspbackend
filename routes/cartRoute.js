@@ -1,13 +1,14 @@
-const express = require("express")
+const express = require('express')
 const router = express.Router()
-const cartController = require("../controllers/cartController")
-const userController = require("../controllers/userController")
+const cartController = require('../controllers/cartController')
+const userController = require('../controllers/userController')
 
-router.post("/user", userController.protect, cartController.addUserCart)
-router.delete("/user", userController.protect, cartController.removeUserCart)
-router.post("/", cartController.findGuessCart, cartController.addItemGuestCart)
+router.get('/user', userController.protect, cartController.getUserCart)
+router.post('/user', userController.protect, cartController.addUserCart)
+router.delete('/user', userController.protect, cartController.removeUserCart)
+router.post('/', cartController.findGuessCart, cartController.addItemGuestCart)
 router.delete(
-  "/",
+  '/',
   cartController.findGuessCart,
   cartController.removeItemGuestCart
 )

@@ -1,6 +1,0 @@
-module.exports = (sequelize, DataTypes) => {
-  const SubDistrict = sequelize.define("SubDistrict", {
-    provinceName: DataTypes.STRING,
-  })
-  return SubDistrict
-}

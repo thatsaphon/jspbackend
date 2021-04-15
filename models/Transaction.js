@@ -1,32 +1,32 @@
 module.exports = (sequelize, DataTypes) => {
   const Transaction = sequelize.define(
-    "Transaction",
+    'Transaction',
     {
       type: {
         type: DataTypes.ENUM,
-        values: ["PURCHASE", "SALES"],
-        allowNull: false,
+        values: ['PURCHASE', 'SALES'],
+        allowNull: false
       },
       date: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: false
       },
       status: {
         type: DataTypes.ENUM,
         values: [
-          "ORDERS",
-          "CONFIRMED",
-          "CANCELLED",
-          "PAYMENT_RECEIVED",
-          "IN_TRANSIT,RECEIVED",
+          'ORDERED',
+          'CONFIRMED',
+          'CANCELLED',
+          'PAYMENT_RECEIVED',
+          'IN_TRANSIT,RECEIVED'
         ],
-        allowNull: false,
+        allowNull: false
       },
       address: DataTypes.STRING,
       firstName: DataTypes.STRING,
       surName: DataTypes.STRING,
       phone: DataTypes.STRING,
-      email: DataTypes.STRING,
+      email: DataTypes.STRING
     },
     { underscored: true }
   )
@@ -34,18 +34,18 @@ module.exports = (sequelize, DataTypes) => {
   Transaction.associate = (models) => {
     Transaction.belongsTo(models.User, {
       foreignKey: {
-        name: "userId",
-        allowNull: false,
+        name: 'userId',
+        allowNull: false
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
     Transaction.hasMany(models.TransactionItem, {
       foreignKey: {
-        name: "transactionId",
+        name: 'transactionId'
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
   }
 

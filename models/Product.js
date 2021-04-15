@@ -1,57 +1,58 @@
 module.exports = (sequelize, DataTypes) => {
   const Product = sequelize.define(
-    "Product",
+    'Product',
     {
       code: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
+        unique: true
       },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
+        unique: true
       },
       description: DataTypes.STRING,
       price: {
         type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0,
+        defaultValue: 0
       },
       averageCost: {
         type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0,
+        defaultValue: 0
       },
       lastPurchaseCost: {
         type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0,
+        defaultValue: 0
       },
+      imgPath: DataTypes.STRING
     },
     { underscored: true }
   )
   Product.associate = (models) => {
     Product.belongsTo(models.Category, {
       foreignKey: {
-        name: "categoryId",
-        defaultValue: 0,
+        name: 'categoryId',
+        defaultValue: 0
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
     Product.hasMany(models.TransactionItem, {
       foreignKey: {
-        name: "productId",
-        allowNull: false,
+        name: 'productId',
+        allowNull: false
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
     Product.hasMany(models.CartItem, {
       foreignKey: {
-        name: "productId",
-        allowNull: false,
+        name: 'productId',
+        allowNull: false
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
   }
 
