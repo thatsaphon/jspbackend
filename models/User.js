@@ -1,29 +1,29 @@
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
-    "User",
+    'User',
     {
       username: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       userType: {
         type: DataTypes.ENUM,
-        values: ["ADMIN", "USER"],
+        values: ['ADMIN', 'USER']
       },
       firstName: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
       lastName: DataTypes.STRING,
       phoneNumber: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
-      email: DataTypes.STRING,
+      email: DataTypes.STRING
     },
     { underscored: true }
   )
@@ -31,32 +31,32 @@ module.exports = (sequelize, DataTypes) => {
   User.associate = (models) => {
     User.belongsTo(models.ProfilePicture, {
       foreignKey: {
-        name: "profilePictureId",
+        name: 'profilePictureId'
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
     User.hasMany(models.Transaction, {
       foreignKey: {
-        name: "userId",
+        name: 'userId'
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
     User.hasMany(models.UserAddress, {
       foreignKey: {
-        name: "userId",
+        name: 'userId'
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
     User.hasMany(models.CartItem, {
       foreignKey: {
-        name: "userId",
-        allowNull: false,
+        name: 'userId'
+        // allowNull: false,
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
   }
 

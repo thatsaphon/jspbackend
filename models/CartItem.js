@@ -1,19 +1,19 @@
 module.exports = (sequelize, DataTypes) => {
   const CartItem = sequelize.define(
-    "CartItem",
+    'CartItem',
     {
       quantity: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
+        allowNull: false
       },
       unitPrice: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
+        allowNull: false
       },
       status: {
         type: DataTypes.ENUM,
-        values: ["IN CART", "REMOVED", "SUBMIT TO ORDER"],
-      },
+        values: ['IN CART', 'REMOVED', 'SUBMIT TO ORDER']
+      }
     },
     { underscored: true }
   )
@@ -21,19 +21,19 @@ module.exports = (sequelize, DataTypes) => {
   CartItem.associate = (models) => {
     CartItem.belongsTo(models.User, {
       foreignKey: {
-        name: "userId",
-        allowNull: false,
+        name: 'userId'
+        // allowNull: false,
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
     CartItem.belongsTo(models.Product, {
       foreignKey: {
-        name: "productId",
-        allowNull: false,
+        name: 'productId',
+        allowNull: false
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
   }
 

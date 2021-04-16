@@ -5,90 +5,100 @@ const { CartItem, Product } = require('../models')
 const readFile = util.promisify(fs.readFile)
 const writeFile = util.promisify(fs.writeFile)
 
-// exports.findCart = async (req, res, next) => {
-//   const data = await readFile("./carts.json", "utf8")
-//   const carts = JSON.parse(data)
-//   if (!req.headers.authorization) {
-//     console.log(carts)
-//     console.log(carts.carts[0])
-//     const guestId = carts.carts[carts.carts.length - 1].cartId + 1
-//     console.log(guestId)
-//     const token = await jwt.sign({ cartId: guestId }, process.env.JWT_SECRET, {
-//       expiresIn: +process.env.JWT_EXPIRES_IN,
-//     })
-//     const cart = { cartId: guestId, userId: 0, cart: [] }
-//     carts.carts.push(cart)
-//     await writeFile("./carts.json", JSON.stringify(carts))
-//     console.log(carts)
-//     req.cart = cart
-//     req.carts = carts
-//     // req.cartId = { cartId: guestId }
-//     next()
-//     // res.status(200).json({ token })
-//   } else if (
-//     req.headers.authorization &&
-//     req.headers.authorization.startsWith("Bearer")
-//   ) {
-//     token = req.headers.authorization.split(" ")[1]
-//     const payload = jwt.verify(token, process.env.JWT_SECRET)
-
-//     if (!payload.cartId) {
-//       const idx = carts.carts.indexOf((item) => item.cartId === payload.cartId)
-//       // console.log(payload.cartId)
-//       // const data = await readFile("./carts.json", "utf8")
-//       // const carts = JSON.parse(data)
-//       // req.carts = carts
-//       // req.cartId = { cartId: payload.Id }
-//     }
-//     // res.status(200).json({ message: "Continue shopping with existed guestId" })
-//     // if (payload.userId) {
-//     // }
-//     next()
-//   } else next()
-// }
-
 exports.findGuessCart = async (req, res, next) => {
-  const data = await readFile('./carts.json', 'utf8')
-  const carts = JSON.parse(data)
-  // const { cart } = JSON.parse(req.headers.authorization)
-  console.log(carts)
-  if (!req.headers.authorization) {
-    const cartId = carts.carts[carts.carts.length - 1].cartId + 1
-    req.headers.authorization = { cartId: cartId, cart: [] }
-    carts.carts.push(req.headers.authorization)
-    await writeFile('./carts.json', JSON.stringify(carts))
+  try {
+    const data = await readFile('./carts.json', 'utf8')
+    const carts = JSON.parse(data)
+    if (!req.headers.authorization) {
+      const cartId = carts.carts[carts.carts.length - 1].cartId + 1
+      req.headers.authorization = { cartId: cartId, cartItem: [] }
+      carts.carts.push(req.headers.authorization)
+      await writeFile('./carts.json', JSON.stringify(carts))
+      req.carts = carts
+    }
+    req.headers.authorization = JSON.parse(req.headers.authorization)
+    const index = carts.carts.findIndex(
+      (item) => item.cartId === +req.headers.authorization.cartId
+    )
     req.carts = carts
+    req.index = index
+    next()
+  } catch (err) {
+    next(err)
   }
-  // const index = carts.carts.indexOf(
-  //   (item) => item.cartId == +req.headers.authorization.cartId
-  // )
-  req.headers.authorization = JSON.parse(req.headers.authorization)
-  const index = carts.carts.findIndex(
-    (item) => item.cartId === +req.headers.authorization.cartId
-  )
-  console.log(carts.carts[4].cartId)
-  console.log(req.headers.authorization.cartId)
-  console.log('sssssssssssssss', index)
-  req.carts = carts
-  req.index = index
-  // req.cart = cart
-  // console.log(cart)
-  next()
-  // res.status(200).json({ cart })
-  // if (req.headers.authorization) {
-  //   carts.carts.indexOf(
-  //     (item) => item.cartId === req.headers.authorization.cartId
-  //   )
-  // }
 }
 
-exports.getCart = async (req, res, next) => {
-  // let cartId = req.cartId
-  // if (!req.cartId) {
-  //   req.cartId = req.carts.carts[carts.carts.length - 1].id + 1
-  //   req.carts.carts.push({ id: req.cartId, user: req.user.id, cart: [] })
-  // }
-  const { cart } = req.headers.authorization
+exports.getGuessCartToken = async (req, res, next) => {
+  try {
+    const data = await readFile('./carts.json', 'utf8')
+    const carts = JSON.parse(data)
+    if (!req.headers.authorization) {
+      const cartId = carts.carts[carts.carts.length - 1].cartId + 1
+      req.headers.authorization = { cartId: cartId, cartItem: [] }
+      carts.carts.push(req.headers.authorization)
+      await writeFile('./carts.json', JSON.stringify(carts))
+      req.carts = carts
+      // req.headers.authorization = JSON.parse(req.headers.authorization)
+      console.log(req.headers.authorization)
+      const index = carts.carts.findIndex(
+        (item) => item.cartId === +req.headers.authorization.cartId
+      )
+      const token = `${JSON.stringify(req.headers.authorization)}`
+      const cart = req.headers.authorization.cartItem
+      req.carts = carts
+      req.index = index
+      res.status(200).json({ token, cart })
+    }
+    if (req.headers.authorization.startsWith('{')) {
+      res.status(200).json({ token, cart: req.headers.authorization.cartItem })
+    }
+  } catch (err) {
+    next(err)
+  }
+}
+
+exports.addGuessCart = async (req, res, next) => {
+  try {
+    const { productId, quantity, unitPrice } = req.body
+
+    // console.log(req.index)
+    // console.log(req.carts)
+    const cartItemIndex = req.carts.carts[req.index].cartItem.findIndex(
+      (item, index) => item.productId === productId
+    )
+    if (cartItemIndex === -1) {
+      const cartItem = await CartItem.create({
+        productId,
+        quantity,
+        unitPrice,
+        status: 'IN CART'
+      })
+      req.carts.carts[req.index].cartItem.push(cartItem)
+      await writeFile('./carts.json', JSON.stringify(req.carts))
+      return res.status(200).json({ cartItem })
+    }
+
+    if (cartItemIndex !== -1) {
+      const cartItem = await CartItem.findOne({
+        where: {
+          id: req.carts.carts[req.index].cartItem[cartItemIndex].id
+        }
+      })
+      req.carts.carts[req.index].cartItem[cartItemIndex] = {
+        ...JSON.parse(JSON.stringify(cartItem)),
+        productId,
+        quantity,
+        unitPrice
+      }
+      await writeFile('./carts.json', JSON.stringify(req.carts))
+      cartItem.update({ productId, quantity, unitPrice })
+      console.log(JSON.parse(JSON.stringify(cartItem)))
+      return res.status(200).json({ cartItem })
+    }
+    // res.status(200).json({ cartItem })
+  } catch (err) {
+    next(err)
+  }
 }
 
 exports.addItemGuestCart = async (req, res, next) => {
@@ -181,16 +191,45 @@ exports.addUserCart = async (req, res, next) => {
 }
 
 exports.removeUserCart = async (req, res, next) => {
-  const { productId } = req.body
-  const isAlreadyInCart = await CartItem.findOne({
-    where: {
-      productId,
-      userId: req.user.id,
-      status: 'IN CART'
-    }
-  })
-  if (!isAlreadyInCart)
-    return res.status(400).json({ message: 'this product is not in your cart' })
-  await isAlreadyInCart.update({ status: 'REMOVED' })
-  res.status(204).json()
+  try {
+    const { productId } = req.body
+    const isAlreadyInCart = await CartItem.findOne({
+      where: {
+        productId,
+        userId: req.user.id,
+        status: 'IN CART'
+      }
+    })
+    if (!isAlreadyInCart)
+      return res
+        .status(400)
+        .json({ message: 'this product is not in your cart' })
+    await isAlreadyInCart.update({ status: 'REMOVED' })
+    res.status(204).json()
+  } catch (err) {
+    next(err)
+  }
+}
+exports.removeAllUserCart = async (req, res, next) => {
+  try {
+    await CartItem.update(
+      { status: 'REMOVED' },
+      { where: { userId: req.user.id, status: 'IN CART' } }
+    )
+    // const isAlreadyInCart = await CartItem.findOne({
+    //   where: {
+    //     productId,
+    //     userId: req.user.id,
+    //     status: 'IN CART'
+    //   }
+    // })
+    // if (!isAlreadyInCart)
+    //   return res
+    //     .status(400)
+    //     .json({ message: 'this product is not in your cart' })
+    // await isAlreadyInCart.update({ status: 'REMOVED' })
+    res.status(204).json()
+  } catch (err) {
+    next(err)
+  }
 }
