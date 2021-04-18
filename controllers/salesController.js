@@ -1,4 +1,4 @@
-const { QueryTypes } = require('sequelize')
+const { Op } = require('sequelize')
 const {
   Product,
   Transaction,
@@ -134,6 +134,74 @@ exports.createSales = async (req, res, next) => {
     next(err)
   }
 }
+
+exports.createGuessSales = async (req, res, next) => {
+  try {
+    const { cartItemId, address, firstName, surName, phone, email } = req.body
+    const cartItems = await CartItem.findAll({
+      where: {
+        id: {
+          [Op.or]: cartItemId
+        },
+        status: 'IN CART'
+      }
+    })
+    if (!cartItems.length)
+      return res.status(400).json({ message: 'You have no item in cart' })
+    const t = await sequelize.transaction()
+    try {
+      const transaction = await Transaction.create(
+        {
+          address,
+          firstName,
+          surName,
+          phone,
+          email,
+          type: 'SALES',
+          date: new Date(),
+          status: 'ORDERED'
+        },
+        { transaction: t }
+      )
+      for (cartItem of cartItems) {
+        const product = await Product.findOne({
+          where: { id: cartItem.productId }
+        })
+        const item = await TransactionItem.create(
+          {
+            productId: cartItem.productId,
+            transactionId: transaction.id,
+            quantity: cartItem.quantity,
+            unitPrice: cartItem.unitPrice,
+            unitCost: product.averageCost
+          },
+          { transaction: t }
+        )
+      }
+      await CartItem.update(
+        { status: 'SUBMIT TO ORDER' },
+        {
+          where: {
+            id: {
+              [Op.or]: [cartItemId]
+            }
+          },
+          transaction: t
+        }
+      )
+      console.log(transaction.id)
+      await t.commit()
+      res.status(200).json({ orderId: transaction.id })
+      // res.status({ message: 'order is created' })
+    } catch (error) {
+      console.log(error)
+      await t.rollback()
+    }
+  } catch (err) {
+    next(err)
+  }
+}
+
 exports.changeSalesStatus = async (req, res, next) => {
   try {
     const { status } = req.body

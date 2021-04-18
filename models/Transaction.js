@@ -34,8 +34,7 @@ module.exports = (sequelize, DataTypes) => {
   Transaction.associate = (models) => {
     Transaction.belongsTo(models.User, {
       foreignKey: {
-        name: 'userId',
-        allowNull: false
+        name: 'userId'
       },
       onDelete: 'RESTRICT',
       onUpdate: 'RESTRICT'

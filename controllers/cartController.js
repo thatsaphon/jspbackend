@@ -50,7 +50,28 @@ exports.getGuessCartToken = async (req, res, next) => {
       res.status(200).json({ token, cart })
     }
     if (req.headers.authorization.startsWith('{')) {
-      res.status(200).json({ token, cart: req.headers.authorization.cartItem })
+      const index = carts.carts.findIndex(
+        (item) => item.cartId === JSON.parse(req.headers.authorization).cartId
+      )
+      const tokenObject = carts.carts[index]
+      const deleteNestedProduct = tokenObject.cartItem.map((item, index) => ({
+        id: item.id,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        status: item.status,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        userId: item.userId,
+        productId: item.productId
+      }))
+      const token = {
+        cartId: tokenObject.cartId,
+        cartItem: deleteNestedProduct
+      }
+      res.status(200).json({
+        token: JSON.stringify(token),
+        cart: tokenObject.cartItem
+      })
     }
   } catch (err) {
     next(err)
@@ -67,23 +88,39 @@ exports.addGuessCart = async (req, res, next) => {
       (item, index) => item.productId === productId
     )
     if (cartItemIndex === -1) {
-      const cartItem = await CartItem.create({
+      const createdCartItem = await CartItem.create({
         productId,
         quantity,
         unitPrice,
         status: 'IN CART'
       })
-      req.carts.carts[req.index].cartItem.push(cartItem)
+      const cartItem = await CartItem.findOne({
+        where: { id: createdCartItem.id },
+        include: {
+          model: Product,
+          attributes: ['price', 'name', 'description', 'imgPath']
+        }
+      })
+      // req.headers.authorization = req.carts.carts[req.index]
+      const token = JSON.stringify(req.carts.carts[req.index])
+      // const token = req.carts.carts[req.index]
+      const cart = req.carts.carts[req.index].cartItem
+      cart[cart.length] = cartItem
       await writeFile('./carts.json', JSON.stringify(req.carts))
-      return res.status(200).json({ cartItem })
+      return res.status(200).json({ cart, token })
     }
 
     if (cartItemIndex !== -1) {
       const cartItem = await CartItem.findOne({
         where: {
           id: req.carts.carts[req.index].cartItem[cartItemIndex].id
+        },
+        include: {
+          model: Product,
+          attributes: ['price', 'name', 'description', 'imgPath']
         }
       })
+      const token = JSON.stringify(req.carts.carts[req.index])
       req.carts.carts[req.index].cartItem[cartItemIndex] = {
         ...JSON.parse(JSON.stringify(cartItem)),
         productId,
@@ -93,27 +130,13 @@ exports.addGuessCart = async (req, res, next) => {
       await writeFile('./carts.json', JSON.stringify(req.carts))
       cartItem.update({ productId, quantity, unitPrice })
       console.log(JSON.parse(JSON.stringify(cartItem)))
-      return res.status(200).json({ cartItem })
+      const cart = req.carts.carts[req.index].cartItem
+      return res.status(200).json({ cart, token })
     }
     // res.status(200).json({ cartItem })
   } catch (err) {
     next(err)
   }
-}
-
-exports.addItemGuestCart = async (req, res, next) => {
-  const { id, quantity, price } = req.body
-  const idx = req.headers.authorization.cart.findIndex(
-    (item) => item.productId === id
-  )
-  if (idx === -1)
-    req.headers.authorization.cart.push({ productId: id, quantity, price })
-  else cart[idx] = { productId: id, quantity, price }
-  console.log(req.headers.authorization)
-  req.carts.carts[req.index].cart.push({ productId: id, quantity, price })
-  console.log(req.carts)
-  await writeFile('./carts.json', JSON.stringify(req.carts))
-  res.status(200).json({ cart: req.carts.carts })
 }
 
 exports.removeItemGuestCart = async (req, res, next) => {
