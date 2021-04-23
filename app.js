@@ -11,10 +11,13 @@ const { sequelize } = require('./models')
 const userController = require('./controllers/userController')
 const cartController = require('./controllers/cartController')
 const locationRoute = require('./routes/loactionRoute')
+const { upload } = require('./middlewares/uploadMiddleware')
 
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+
+// app.use('/product', upload.single('image'), productRoute)
 
 app.get('/guest', cartController.findGuessCart)
 
