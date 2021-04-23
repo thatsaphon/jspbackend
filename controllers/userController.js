@@ -1,9 +1,10 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { User, Address, UserAddress } = require('../models')
-
+const { User, Address, UserAddress, ProfilePicture } = require('../models')
+const { Op } = require('sequelize')
 const fs = require('fs')
 const util = require('util')
+const cloudinary = require('cloudinary').v2
 
 const readFile = util.promisify(fs.readFile)
 const writeFile = util.promisify(fs.writeFile)
@@ -75,7 +76,13 @@ exports.me = async (req, res, next) => {
       province,
       postCode
     } = await Address.findOne({
-      include: { model: UserAddress, where: { userId: id } }
+      include: {
+        model: UserAddress,
+        where: { userId: id }
+      }
+    })
+    const { path, name } = await ProfilePicture.findOne({
+      where: { id: profilePictureId }
     })
     // const address = await UserAddress.findOne({
     //   include: { model: Address },
@@ -94,7 +101,8 @@ exports.me = async (req, res, next) => {
       subDistrict,
       district,
       province,
-      postCode
+      postCode,
+      path: path + '/' + name
     })
   } catch (err) {
     next(err)
@@ -178,11 +186,34 @@ exports.register = async (req, res, next) => {
       lastName,
       phoneNumber,
       email,
-      profilePictureId,
       textAddress,
-      address
+      province,
+      district,
+      subDistrict,
+      postCode
     } = req.body
-    console.log(textAddress, address)
+    let profilePicture = {}
+
+    // if (req.file) {
+    //   cloudinary.uploader.upload(
+    //     req.file.path,
+    //     async (err, result) => {
+    //       if (err) return next(err)
+    //       console.log(result)
+    //       const fileName = result.secure_url.split('/')[
+    //         result.secure_url.split('/').length - 1
+    //       ]
+    //       const path = result.secure_url.split('/').slice(0, -1).join('/')
+    //       // console.log(fileName)
+    //       const profileDb = await ProfilePicture.create({
+    //         path,
+    //         name: fileName
+    //       })
+    //       profilePicture = { ...profileDb }
+    //       fs.unlinkSync(req.file.path)
+    //     }
+    //   )
+    // }
     const isUsernameExist = await User.findOne({ where: { username } })
     if (isUsernameExist)
       return res.status(400).json({ message: 'username exist already' })
@@ -196,15 +227,15 @@ exports.register = async (req, res, next) => {
       lastName,
       phoneNumber,
       email,
-      profilePictureId
+      profilePictureId: profilePicture.id
     })
     const dbAddress = await Address.create({
       phoneNumber,
       address: textAddress,
-      subDistrict: address.subDistrict,
-      district: address.district,
-      province: address.province,
-      postCode: address.postCode
+      subDistrict,
+      district,
+      province,
+      postCode
     })
     await UserAddress.create({
       addressId: dbAddress.id,
@@ -218,7 +249,7 @@ exports.register = async (req, res, next) => {
       lastName,
       phoneNumber,
       email,
-      profilePictureId
+      profilePictureId: profilePicture.id
     }
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: +process.env.JWT_EXPIRES_IN
@@ -226,6 +257,46 @@ exports.register = async (req, res, next) => {
     console.log(token)
 
     res.status(201).json({ token })
+  } catch (err) {
+    next(err)
+  }
+}
+exports.changeProfilePicture = async (req, res, next) => {
+  try {
+    console.log(req.file.path)
+    cloudinary.uploader.upload(req.file.path, async (err, result) => {
+      if (err) return next(err)
+      const fileName = result.secure_url.split('/')[
+        result.secure_url.split('/').length - 1
+      ]
+      const path = result.secure_url.split('/').slice(0, -1).join('/')
+      // console.log(fileName)
+      const profilePicture = await ProfilePicture.create({
+        path,
+        name: fileName,
+        userId: req.user.id
+      })
+      const updatedUser = await User.update(
+        {
+          profilePictureId: profilePicture.id
+        },
+        { where: { id: req.user.id } }
+      )
+      fs.unlinkSync(req.file.path)
+      res.status(200).json({
+        imagePath: profilePicture.path + '/' + profilePicture.name,
+        message: 'Profile Picture has been set'
+      })
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+exports.deleteProfilePicture = async (req, res, next) => {
+  try {
+    await User.update({ profilePictureId: 0 }, { where: { id: req.user.id } })
+    res.status(204).json()
   } catch (err) {
     next(err)
   }

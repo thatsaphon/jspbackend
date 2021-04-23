@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
       },
       userType: {
         type: DataTypes.ENUM,
-        values: ['ADMIN', 'USER']
+        values: ['ADMIN', 'USER'],
+        defaultValue: 'USER'
       },
       firstName: {
         type: DataTypes.STRING,
@@ -31,7 +32,8 @@ module.exports = (sequelize, DataTypes) => {
   User.associate = (models) => {
     User.belongsTo(models.ProfilePicture, {
       foreignKey: {
-        name: 'profilePictureId'
+        name: 'profilePictureId',
+        defaultValue: 0
       },
       onDelete: 'RESTRICT',
       onUpdate: 'RESTRICT'
@@ -53,7 +55,6 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.CartItem, {
       foreignKey: {
         name: 'userId'
-        // allowNull: false,
       },
       onDelete: 'RESTRICT',
       onUpdate: 'RESTRICT'

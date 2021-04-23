@@ -1,9 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
   const ProfilePicture = sequelize.define(
-    "ProfilePicture",
+    'ProfilePicture',
     {
       path: DataTypes.STRING,
       name: DataTypes.STRING,
+      userId: DataTypes.STRING
     },
     { underscored: true }
   )
@@ -11,10 +12,11 @@ module.exports = (sequelize, DataTypes) => {
   ProfilePicture.associate = (models) => {
     ProfilePicture.hasMany(models.User, {
       foreignKey: {
-        name: "profilePictureId",
+        name: 'profilePictureId',
+        defaultValue: 0
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
   }
 

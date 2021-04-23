@@ -1,8 +1,9 @@
 module.exports = (sequelize, DataTypes) => {
   const Category = sequelize.define(
-    "Category",
+    'Category',
     {
-      name: DataTypes.STRING,
+      code: { type: DataTypes.STRING, allowNull: false },
+      name: { type: DataTypes.STRING, allowNull: false }
     },
     { underscored: true }
   )
@@ -10,10 +11,10 @@ module.exports = (sequelize, DataTypes) => {
   Category.associate = (models) => {
     Category.hasMany(models.Product, {
       foreignKey: {
-        name: "categoryId",
+        name: 'categoryId'
       },
-      onDelete: "RESTRICT",
-      onUpdate: "RESTRICT",
+      onDelete: 'RESTRICT',
+      onUpdate: 'RESTRICT'
     })
   }
 
