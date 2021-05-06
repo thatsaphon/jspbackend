@@ -45,27 +45,28 @@ exports.getAllSales = async (req, res, next) => {
 exports.getsalesById = async (req, res, next) => {
   try {
     const { id } = req.params
-    const sale = await Transaction.findOne({
+    const order = await Transaction.findOne({
       where: { id },
       include: {
         model: TransactionItem,
-        attributes: ['productId', 'quantity', 'unitPrice']
-      },
-      attributes: [
-        'id',
-        'createdAt',
-        'updatedAt',
-        'status',
-        'address',
-        'userId'
-      ]
+        include: { model: Product }
+        // attributes: ['productId', 'quantity', 'unitPrice']
+      }
+      // attributes: [
+      //   'id',
+      //   'createdAt',
+      //   'updatedAt',
+      //   'status',
+      //   'address',
+      //   'userId'
+      // ]
     })
-    console.log(sale)
-    if (sale.userId !== req.user.id)
+    // console.log(order)
+    if (order.userId !== req.user.id)
       return res
         .status(400)
         .json({ message: 'You are unauthorized to see this order' })
-    res.status(200).json({ sale })
+    res.status(200).json({ order })
   } catch (err) {
     next(err)
   }
@@ -213,6 +214,23 @@ exports.changeSalesStatus = async (req, res, next) => {
         .json({ message: 'You are unauthorized on this order' })
     sale.update({ status })
     res.status(200).json({ message: `Order's status is updated to ${status}` })
+  } catch (err) {
+    next(err)
+  }
+}
+
+exports.uploadSlip = async (req, res, next) => {
+  try {
+    console.log('222222', req.file)
+    console.log('222222', req.file.path)
+    const { id } = req.params
+    const sale = await Transaction.findOne({ where: { id } })
+    if (sale.userId !== req.user.id)
+      return res
+        .status(400)
+        .json({ message: 'You are unauthorized on this order' })
+    sale.update({ slipPath: req.file.path })
+    res.status(200).json({ message: `Slip is uploaded` })
   } catch (err) {
     next(err)
   }
