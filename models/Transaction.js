@@ -15,10 +15,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM,
         values: [
           'ORDERED',
-          'CONFIRMED',
+          'WAITING_PAYMENT_APPROVAL',
           'CANCELLED',
           'PAYMENT_RECEIVED',
-          'IN_TRANSIT,RECEIVED'
+          'IN_TRANSIT',
+          'RECEIVED'
         ],
         allowNull: false
       },
@@ -26,7 +27,8 @@ module.exports = (sequelize, DataTypes) => {
       firstName: DataTypes.STRING,
       surName: DataTypes.STRING,
       phone: DataTypes.STRING,
-      email: DataTypes.STRING
+      email: DataTypes.STRING,
+      slipPath: DataTypes.STRING
     },
     { underscored: true }
   )

@@ -218,3 +218,20 @@ exports.changeSalesStatus = async (req, res, next) => {
     next(err)
   }
 }
+
+exports.uploadSlip = async (req, res, next) => {
+  try {
+    console.log('222222', req.file)
+    console.log('222222', req.file.path)
+    const { id } = req.params
+    const sale = await Transaction.findOne({ where: { id } })
+    if (sale.userId !== req.user.id)
+      return res
+        .status(400)
+        .json({ message: 'You are unauthorized on this order' })
+    sale.update({ slipPath: req.file.path })
+    res.status(200).json({ message: `Slip is uploaded` })
+  } catch (err) {
+    next(err)
+  }
+}
