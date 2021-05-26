@@ -1,6 +1,4 @@
 const { Province, District, SubDistrict } = require('../models')
-// const District = require('../models/location/District')
-// const SubDistrict = require('../models/location/SubDistrict')
 
 exports.getProvince = async (req, res, next) => {
   try {

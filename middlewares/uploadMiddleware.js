@@ -3,6 +3,7 @@ const multer = require('multer')
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log(file)
+    console.log('object')
     cb(null, 'public/product/image')
   },
   filename: (req, file, cb) => {

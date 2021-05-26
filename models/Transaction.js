@@ -19,7 +19,9 @@ module.exports = (sequelize, DataTypes) => {
           'CANCELLED',
           'PAYMENT_RECEIVED',
           'IN_TRANSIT',
-          'RECEIVED'
+          'RECEIVED',
+          'PURCHASED',
+          'WAITSUBMIT'
         ],
         allowNull: false
       },

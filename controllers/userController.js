@@ -71,18 +71,13 @@ exports.me = async (req, res, next) => {
       email,
       profilePictureId
     } = req.user
-    const {
-      address,
-      subDistrict,
-      district,
-      province,
-      postCode
-    } = await Address.findOne({
-      include: {
-        model: UserAddress,
-        where: { userId: id }
-      }
-    })
+    const { address, subDistrict, district, province, postCode } =
+      await Address.findOne({
+        include: {
+          model: UserAddress,
+          where: { userId: id }
+        }
+      })
     const { path, name } = await ProfilePicture.findOne({
       where: { id: profilePictureId }
     })
@@ -268,9 +263,8 @@ exports.changeProfilePicture = async (req, res, next) => {
     console.log(req.file.path)
     cloudinary.uploader.upload(req.file.path, async (err, result) => {
       if (err) return next(err)
-      const fileName = result.secure_url.split('/')[
-        result.secure_url.split('/').length - 1
-      ]
+      const fileName =
+        result.secure_url.split('/')[result.secure_url.split('/').length - 1]
       const path = result.secure_url.split('/').slice(0, -1).join('/')
       // console.log(fileName)
       const profilePicture = await ProfilePicture.create({
@@ -297,7 +291,16 @@ exports.changeProfilePicture = async (req, res, next) => {
 
 exports.deleteProfilePicture = async (req, res, next) => {
   try {
-    await User.update({ profilePictureId: 0 }, { where: { id: req.user.id } })
+    const image = await ProfilePicture.findOne({
+      where: { id: req.user.profilePictureId }
+    })
+    const publicId = image.name.split('.')[0]
+    cloudinary.api.delete_resources(publicId, (err, result) => {
+      if (err) next(err)
+      console.log(result)
+    })
+    await User.update({ profilePictureId: 1 }, { where: { id: req.user.id } })
+    await image.destroy()
     res.status(204).json()
   } catch (err) {
     next(err)

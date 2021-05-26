@@ -1,5 +1,12 @@
 const { Op } = require('sequelize')
-const { Product, Category } = require('../models')
+const {
+  Product,
+  Category,
+  Transaction,
+  TransactionItem,
+  sequelize,
+  ProductImage
+} = require('../models')
 const cloudinary = require('cloudinary').v2
 const fs = require('fs')
 
@@ -10,6 +17,10 @@ exports.getAllProduct = async (req, res, next) => {
       //   model: 'CartItem',
       //   where: { status: 'IN CART', userId: 'user.req.id' }
       // }
+      include: {
+        model: TransactionItem,
+        include: { model: Transaction }
+      }
     })
     console.log(products)
     res.status(200).json({ products })
@@ -20,20 +31,52 @@ exports.getAllProduct = async (req, res, next) => {
 exports.getProductById = async (req, res, next) => {
   try {
     const { id } = req.params
-    const products = await Product.findAll({ where: { id } })
-    res.status(200).json({ products })
+    const product = await Product.findOne({
+      where: { id },
+      include: [Category, ProductImage]
+    })
+    res.status(200).json({ product })
   } catch (err) {
     next(err)
   }
 }
 exports.getFilteredProduct = async (req, res, next) => {
   try {
-    let { name, description, categoryId, price } = req.query
-    if (!name) name = ''
-    if (!description) description = ''
-    if (!categoryId) categoryId = ''
-    if (!price) price = ''
+    let {
+      name = '',
+      description = '',
+      categoryId = '',
+      price = '',
+      page = 1
+    } = req.query
     const products = await Product.findAll({
+      where: {
+        name: {
+          [Op.substring]: `${name}`
+        },
+        description: {
+          [Op.substring]: `${description}`
+        },
+        categoryId: {
+          [Op.substring]: `${categoryId}`
+        },
+        price: {
+          [Op.substring]: `${price}`
+        }
+      },
+      // attributes: {
+      //   include: [[sequelize.fn('COUNT', sequelize.col('id')), 'totalPage']]
+      // },
+      include: [
+        {
+          model: TransactionItem,
+          include: { model: Transaction }
+        }
+      ],
+      limit: 12,
+      offset: (page - 1) * 12
+    })
+    const productCount = await Product.count({
       where: {
         name: {
           [Op.substring]: `${name}`
@@ -50,7 +93,7 @@ exports.getFilteredProduct = async (req, res, next) => {
       }
     })
     // console.log(products)
-    res.status(200).json({ products })
+    res.status(200).json({ products, totalPage: Math.ceil(productCount / 12) })
   } catch (err) {
     next(err)
   }
@@ -109,18 +152,19 @@ exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params
     const { code, name, description, categoryId, price } = req.body
-    const isCodeExist = Product.findOne({ where: { code } })
+    const product = await Product.findOne({ where: { id } })
+    const isCodeExist = await Product.findOne({ where: { code } })
     console.log(isCodeExist)
-    if (isCodeExist)
+    if (isCodeExist && product.id !== isCodeExist.id)
       return res.status(400).json({ message: 'this code already exist' })
-    const isNameExist = Product.findOne({ where: { name } })
-    if (isNameExist)
+    const isNameExist = await Product.findOne({ where: { name } })
+    if (isNameExist && product.id !== isNameExist.id)
       return res
         .statue(400)
         .json({ message: 'this product name already exist' })
-    const product = await Product.update(
-      { code, name, description, categoryId, price },
-      { where: { id } }
+    await product.update(
+      { code, name, description, categoryId, price }
+      // { where: { id } }
     )
     res.status(200).json({ product })
   } catch (err) {
@@ -154,6 +198,43 @@ exports.createCategory = async (req, res, next) => {
     const { code, name } = req.body
     const category = await Category.create({ code, name })
     res.status(201).json({ category })
+  } catch (err) {
+    next(err)
+  }
+}
+
+exports.addImageByProductId = async (req, res, next) => {
+  try {
+    const { productId } = req.params
+    // if (req.user.userType !== 'ADMIN')
+    //   return res.status(401).json({ message: 'You are unauthorized' })
+    cloudinary.uploader.upload(req.file.path, async (err, result) => {
+      if (err) return next(err)
+      const productImage = ProductImage.create({
+        productId,
+        imgPath: result.secure_url
+      })
+      fs.unlinkSync(req.file.path)
+      res.status(201).json({ productImage })
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+exports.deleteImage = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const image = await ProductImage.findOne({ where: { id } })
+    const publicId = image.imgPath
+      .split('/')
+      [image.imgPath.split('/').length - 1].split('.')[0]
+    cloudinary.api.delete_resources(publicId, (err, result) => {
+      if (err) next(err)
+      console.log(result)
+    })
+    await image.destroy()
+    res.status(204).json()
   } catch (err) {
     next(err)
   }

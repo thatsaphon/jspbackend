@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     User.belongsTo(models.ProfilePicture, {
       foreignKey: {
         name: 'profilePictureId',
-        defaultValue: 0
+        defaultValue: 1
       },
       onDelete: 'RESTRICT',
       onUpdate: 'RESTRICT'

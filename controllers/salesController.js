@@ -4,8 +4,11 @@ const {
   Transaction,
   CartItem,
   sequelize,
-  TransactionItem
+  TransactionItem,
+  User
 } = require('../models')
+const cloudinary = require('cloudinary').v2
+const fs = require('fs')
 
 // exports.getAllSales = async (req, res, next) => {
 //   try {
@@ -20,7 +23,28 @@ const {
 //     next(err)
 //   }
 // }
+
 exports.getAllSales = async (req, res, next) => {
+  try {
+    const { status, page = 1 } = req.query
+    const sales = await Transaction.findAll({
+      where: { status: { [Op.like]: '%' + status + '%' } },
+      order: [['id', 'desc']],
+      offset: (page - 1) * 10,
+      limit: 10,
+      include: [{ model: User }, { model: TransactionItem }]
+    })
+    const total = await Transaction.count({
+      where: { status: { [Op.like]: '%' + status + '%' } },
+      order: [['id', 'desc']]
+    })
+    res.status(200).json({ orders: sales, total })
+  } catch (err) {
+    next(err)
+  }
+}
+
+exports.getAllSalesOfUser = async (req, res, next) => {
   try {
     const sales = await Transaction.findAll({
       where: { userId: req.user.id },
@@ -221,16 +245,24 @@ exports.changeSalesStatus = async (req, res, next) => {
 
 exports.uploadSlip = async (req, res, next) => {
   try {
-    console.log('222222', req.file)
-    console.log('222222', req.file.path)
     const { id } = req.params
     const sale = await Transaction.findOne({ where: { id } })
     if (sale.userId !== req.user.id)
       return res
         .status(400)
         .json({ message: 'You are unauthorized on this order' })
-    sale.update({ slipPath: req.file.path })
-    res.status(200).json({ message: `Slip is uploaded` })
+
+    cloudinary.uploader.upload(req.file.path, async (err, result) => {
+      if (err) return next(err)
+      const slipPath = result.secure_url
+      // const updateSlip = await Transaction.update(
+      //   { slipPath },
+      //   { where: { id } }
+      // )
+      sale.update({ slipPath })
+      fs.unlinkSync(req.file.path)
+    })
+    res.status(204).json({ message: `Slip is uploaded` })
   } catch (err) {
     next(err)
   }

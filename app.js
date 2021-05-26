@@ -7,6 +7,7 @@ const productRoute = require('./routes/productRoute')
 const userRoute = require('./routes/userRoute')
 const cartRoute = require('./routes/cartRoute')
 const salesRoute = require('./routes/salesRoute')
+const purchaseRoute = require('./routes/purchaseRoute')
 const { sequelize } = require('./models')
 const userController = require('./controllers/userController')
 const cartController = require('./controllers/cartController')
@@ -25,6 +26,7 @@ app.post('/register', userController.register)
 app.post('/login', userController.login)
 
 app.use('/order', salesRoute)
+app.use('/purchase', purchaseRoute)
 app.use('/cart', cartRoute)
 app.use('/product', productRoute)
 app.use('/user', userRoute)
@@ -36,7 +38,7 @@ app.use('/', (req, res, next) => {
 
 app.use(errorMiddleware)
 
-// sequelize.sync({ force: true })
+// sequelize.sync({ alter: true })
 const port = 8000
 app.listen(port, (req, res, next) => {
   console.log(`Server running on port ${port}`)
