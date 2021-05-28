@@ -26,9 +26,15 @@ const fs = require('fs')
 
 exports.getAllSales = async (req, res, next) => {
   try {
-    const { status, page = 1 } = req.query
+    const { status = '', page = 1, customer = '' } = req.query
     const sales = await Transaction.findAll({
-      where: { status: { [Op.like]: '%' + status + '%' } },
+      where: {
+        status: { [Op.like]: '%' + status + '%' },
+        [Op.or]: [
+          { firstName: { [Op.like]: '%' + customer + '%' } },
+          { surName: { [Op.like]: '%' + customer + '%' } }
+        ]
+      },
       order: [['id', 'desc']],
       offset: (page - 1) * 10,
       limit: 10,
@@ -86,7 +92,7 @@ exports.getsalesById = async (req, res, next) => {
       // ]
     })
     // console.log(order)
-    if (order.userId !== req.user.id)
+    if (order.userId !== req.user.id && req.user.userType !== 'ADMIN')
       return res
         .status(400)
         .json({ message: 'You are unauthorized to see this order' })
@@ -251,7 +257,7 @@ exports.uploadSlip = async (req, res, next) => {
       return res
         .status(400)
         .json({ message: 'You are unauthorized on this order' })
-
+    // if (!req.file) return res.status(400).json({ message: 'File is not found' })
     cloudinary.uploader.upload(req.file.path, async (err, result) => {
       if (err) return next(err)
       const slipPath = result.secure_url

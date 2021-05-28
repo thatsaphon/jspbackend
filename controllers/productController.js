@@ -51,12 +51,23 @@ exports.getFilteredProduct = async (req, res, next) => {
     } = req.query
     const products = await Product.findAll({
       where: {
-        name: {
-          [Op.substring]: `${name}`
-        },
-        description: {
-          [Op.substring]: `${description}`
-        },
+        [Op.or]: [
+          {
+            name: {
+              [Op.substring]: `${name}`
+            }
+          },
+          {
+            description: {
+              [Op.substring]: `${name}`
+            }
+          },
+          {
+            code: {
+              [Op.substring]: `${name}`
+            }
+          }
+        ],
         categoryId: {
           [Op.substring]: `${categoryId}`
         },
@@ -71,6 +82,9 @@ exports.getFilteredProduct = async (req, res, next) => {
         {
           model: TransactionItem,
           include: { model: Transaction }
+        },
+        {
+          model: ProductImage
         }
       ],
       limit: 12,

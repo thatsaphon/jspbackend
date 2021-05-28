@@ -18,8 +18,8 @@ module.exports = (sequelize, DataTypes) => {
           'WAITING_PAYMENT_APPROVAL',
           'CANCELLED',
           'PAYMENT_RECEIVED',
-          'IN_TRANSIT',
-          'RECEIVED',
+          'SHIPED',
+          'COMPLETED',
           'PURCHASED',
           'WAITSUBMIT'
         ],
