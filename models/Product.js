@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     Product.belongsTo(models.Category, {
       foreignKey: {
         name: 'categoryId',
-        defaultValue: 0
+        defaultValue: 1
       },
       onDelete: 'RESTRICT',
       onUpdate: 'RESTRICT'
