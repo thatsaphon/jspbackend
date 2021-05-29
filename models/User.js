@@ -21,10 +21,14 @@ module.exports = (sequelize, DataTypes) => {
       },
       lastName: DataTypes.STRING,
       phoneNumber: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING
+        // allowNull: false
       },
-      email: DataTypes.STRING
+      email: DataTypes.STRING,
+      OAuthId: {
+        type: DataTypes.STRING,
+        field: 'oauth_id'
+      }
     },
     { underscored: true }
   )

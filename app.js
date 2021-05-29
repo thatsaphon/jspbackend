@@ -24,6 +24,7 @@ app.get('/guest', cartController.findGuessCart)
 
 app.post('/register', userController.register)
 app.post('/login', userController.login)
+app.post('/login/facebook', userController.facebookLogin)
 
 app.use('/order', salesRoute)
 app.use('/purchase', purchaseRoute)
